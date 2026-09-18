@@ -1,4 +1,138 @@
-<img src="https://image.acg.lol/file/2026/09/18/48.jpg" alt="%DISPLAY_TITLE%" border="0">
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片浏览器</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, "Microsoft YaHei", sans-serif;
+    background: #f5f5f5;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* 图片纵向排列，不使用网格 */
+.gallery {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.gallery img:hover {
+    opacity: 0.85;
+}
+
+/* 独立图片浏览层 */
+.viewer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.95);
+    align-items: center;
+    justify-content: center;
+}
+
+.viewer.active {
+    display: flex;
+}
+
+.viewer-image {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    user-select: none;
+}
+
+/* 关闭按钮 */
+.close {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* 左右按钮 */
+.nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 45px;
+    padding: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.prev {
+    left: 10px;
+}
+
+.next {
+    right: 10px;
+}
+
+.counter {
+    position: absolute;
+    bottom: 20px;
+    color: white;
+    font-size: 16px;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .gallery img {
+        margin-bottom: 12px;
+    }
+
+    .viewer-image {
+        max-width: 95vw;
+        max-height: 85vh;
+    }
+
+    .nav {
+        font-size: 30px;
+        padding: 10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>我的图片相册</h1>
+
+<!-- 图片单列展示 -->
+<div class="gallery" id="gallery">
+    <img src="https://image.acg.lol/file/2026/09/18/48.jpg" alt="%DISPLAY_TITLE%" border="0">
 <img src="https://image.acg.lol/file/2026/09/18/47.jpg" alt="%DISPLAY_TITLE%" border="0">
 <img src="https://image.acg.lol/file/2026/09/18/46.jpg" alt="%DISPLAY_TITLE%" border="0">
 <img src="https://image.acg.lol/file/2026/09/18/4599f224fe0d1d7105.jpg" alt="%DISPLAY_TITLE%" border="0">
@@ -46,3 +180,96 @@
 <img src="https://image.acg.lol/file/2026/09/18/04594581c34d597296.jpg" alt="%DISPLAY_TITLE%" border="0">
 <img src="https://image.acg.lol/file/2026/09/18/0558f2e8b201bf315d.jpg" alt="%DISPLAY_TITLE%" border="0">
 <img src="https://image.acg.lol/file/2026/09/18/016aeb93952b227afc.jpg" alt="%DISPLAY_TITLE%" border="0">
+</div>
+
+<!-- 独立浏览器 -->
+<div class="viewer" id="viewer">
+    <span class="close" id="close">&times;</span>
+    <span class="nav prev" id="prev">&#10094;</span>
+
+    <img class="viewer-image" id="viewerImage" src="" alt="大图">
+
+    <span class="nav next" id="next">&#10095;</span>
+    <div class="counter" id="counter"></div>
+</div>
+
+<script>
+const images = document.querySelectorAll("#gallery img");
+const viewer = document.getElementById("viewer");
+const viewerImage = document.getElementById("viewerImage");
+const counter = document.getElementById("counter");
+
+let currentIndex = 0;
+
+// 打开图片
+function openViewer(index) {
+    currentIndex = index;
+    updateImage();
+    viewer.classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+
+// 更新图片
+function updateImage() {
+    viewerImage.src = images[currentIndex].src;
+    viewerImage.alt = images[currentIndex].alt;
+
+    counter.textContent =
+        `${currentIndex + 1} / ${images.length}`;
+}
+
+// 关闭图片
+function closeViewer() {
+    viewer.classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+// 上一张
+function showPrev() {
+    currentIndex =
+        (currentIndex - 1 + images.length) % images.length;
+    updateImage();
+}
+
+// 下一张
+function showNext() {
+    currentIndex =
+        (currentIndex + 1) % images.length;
+    updateImage();
+}
+
+// 点击图片
+images.forEach((img, index) => {
+    img.addEventListener("click", () => openViewer(index));
+});
+
+// 关闭
+document.getElementById("close")
+    .addEventListener("click", closeViewer);
+
+// 切换
+document.getElementById("prev")
+    .addEventListener("click", showPrev);
+
+document.getElementById("next")
+    .addEventListener("click", showNext);
+
+// 点击背景关闭
+viewer.addEventListener("click", (e) => {
+    if (e.target === viewer) {
+        closeViewer();
+    }
+});
+
+// 键盘操作
+document.addEventListener("keydown", (e) => {
+    if (!viewer.classList.contains("active")) return;
+
+    if (e.key === "Escape") closeViewer();
+    if (e.key === "ArrowLeft") showPrev();
+    if (e.key === "ArrowRight") showNext();
+});
+</script>
+
+</body>
+</html>
