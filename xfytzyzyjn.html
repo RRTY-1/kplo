@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+<title>自适应图片浏览器</title>
+<style>
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, "Microsoft YaHei", sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    padding: clamp(10px, 3vw, 30px);
+}
+
+/* 标题 */
+h1 {
+    text-align: center;
+    font-size: clamp(20px, 3vw, 30px);
+    margin: 10px 0 25px;
+}
+
+/* 单列图片，自适应宽度 */
+.gallery {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 20px;
+    border-radius: clamp(4px, 1vw, 10px);
+    cursor: pointer;
+    object-fit: contain;
+    transition: opacity 0.2s;
+}
+
+.gallery img:hover {
+    opacity: 0.85;
+}
+
+/* 图片浏览层 */
+.viewer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.96);
+    align-items: center;
+    justify-content: center;
+    padding: 60px 15px;
+}
+
+.viewer.active {
+    display: flex;
+}
+
+/* 大图 */
+.viewer-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+}
+
+/* 关闭按钮 */
+.close {
+    position: absolute;
+    top: 10px;
+    right: clamp(15px, 3vw, 35px);
+    color: white;
+    font-size: clamp(30px, 5vw, 45px);
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+    padding: 5px 10px;
+}
+
+/* 左右切换 */
+.nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: clamp(30px, 5vw, 50px);
+    padding: clamp(8px, 2vw, 20px);
+    cursor: pointer;
+    user-select: none;
+    z-index: 2;
+    border-radius: 8px;
+}
+
+.nav:active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.prev {
+    left: 0;
+}
+
+.next {
+    right: 0;
+}
+
+/* 图片计数 */
+.counter {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+/* 手机端优化 */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        margin: 10px 0 18px;
+    }
+
+    .gallery img {
+        margin-bottom: 12px;
+        border-radius: 5px;
+    }
+
+    .viewer {
+        padding: 55px 5px;
+    }
+
+    .viewer-image {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .nav {
+        padding: 12px 8px;
+        font-size: 32px;
+    }
+
+    .close {
+        top: 15px;
+        right: 10px;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 360px) {
+    .nav {
+        font-size: 26px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>我的图片相册</h1>
+
+<!-- 单列图片展示 -->
+<div class="gallery" id="gallery">
+    <img src="https://image.acg.lol/file/2026/10/04/001f723c48957b9c45b.jpg" alt="001" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0024f593fe93da5b7ba.jpg" alt="002" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/003e3b5545d10b2f887.jpg" alt="003" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/004639a1b93173c6914.jpg" alt="004" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/005cbe8aa45f90fb0f0.jpg" alt="005" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0061e43faa398a5b73d.jpg" alt="006" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/007a35b983b81a9d0b4.jpg" alt="007" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/008d25cf893e0c8fd8c.jpg" alt="008" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/009022c52862dce6f4c.jpg" alt="009" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/010c9a5e0b5216d6713.jpg" alt="010" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/011bf028539734ba9c1.jpg" alt="011" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0127c762a00dd292519.jpg" alt="012" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0135bc5666f3d72c7b8.jpg" alt="013" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/014e40842d9f4367e1a.jpg" alt="014" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/01578321e6bf4e073d5.jpg" alt="015" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/016b514fbdda1cf3719.jpg" alt="016" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/017cbff9bcf988bc820.jpg" alt="017" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/018541727085c37c43e.jpg" alt="018" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/01938179a53e1b9f87f.jpg" alt="019" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/020e1c43bcd88b8994e.jpg" alt="020" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/021559ce352c3fd225e.jpg" alt="021" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/022324059cea62c5589.jpg" alt="022" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/02361abe753b36aad78.jpg" alt="023" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/02420387953139b0396.jpg" alt="024" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0258c24f0adddbdeaba.jpg" alt="025" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/026f452f342d40bef15.jpg" alt="026" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0272adf832700957c6a.jpg" alt="027" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/028fc8d240bd0be8e20.jpg" alt="028" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0296947853d858b73dc.jpg" alt="029" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/030c09033d23c595bc0.jpg" alt="030" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/03100d8c08e64f3d95e.jpg" alt="031" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/032a4eb9a5bedc2413c.jpg" alt="032" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0332c32f48b1dbdab16.jpg" alt="033" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/034c1cfda5c106012b5.jpg" alt="034" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/03598cba0d2d125e387.jpg" alt="035" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0367a5610227dfd771f.jpg" alt="036" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/037d4744450ea985ec5.jpg" alt="037" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/038262405430491fe21.jpg" alt="038" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/039d6ebf094e56268a6.jpg" alt="039" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/040cc7288b16e78ae49.jpg" alt="040" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/041aee7492b216a6c3c.jpg" alt="041" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0421077d1bd70c6f0a4.jpg" alt="042" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/043fd81b465ae9c4786.jpg" alt="043" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0441c2ecb0052cf1bf0.jpg" alt="044" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/045debb8c295c314450.jpg" alt="045" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0460bed06a773219b77.jpg" alt="046" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/047b6483fc6fa4908a3.jpg" alt="047" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/04835d9fecad19328f7.jpg" alt="048" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/049b26add00b03fdcab.jpg" alt="049" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0507e48acc38e9a949c.jpg" alt="050" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/051ac094a1d78e73648.jpg" alt="051" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/052a21e8926e22c5dba.jpg" alt="052" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0535f92888ef96d263c.jpg" alt="053" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/054cfce7b6feb25f59b.jpg" alt="054" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/055b2ef6faad415789e.jpg" alt="055" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/05613cf931a180838bc.jpg" alt="056" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/057f00cdf54996a5fa6.jpg" alt="057" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/058d5c912d405f0454d.jpg" alt="058" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/059ca56845af70de168.jpg" alt="059" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/06056ad0e4d2c3f06d0.jpg" alt="060" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/061a6d4d2e9ce80aa85.jpg" alt="061" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0622d1ae89b6366b202.jpg" alt="062" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0635f431c8a7281dbbe.jpg" alt="063" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/064a6e691232bf8af3c.jpg" alt="064" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/065eac1857b1fa80d44.jpg" alt="065" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/066889b75c59be47a73.jpg" alt="066" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/067be6093415bb52472.jpg" alt="067" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0681cb23a3d1a3f159a.jpg" alt="068" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/069614238513f4d6516.jpg" alt="069" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/070128c839a8845407c.jpg" alt="070" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/071f1507ccbf883a70f.jpg" alt="071" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/07288eb0d397f7b8418.jpg" alt="072" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/073b66d0e899c36549f.jpg" alt="073" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/074fae7a808f5a01357.jpg" alt="074" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/075812d49959f847d62.jpg" alt="075" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/076d8ad6be6794ceec4.jpg" alt="076" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/07710de33f8071923ea.jpg" alt="077" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/078f4770e18bc5a4363.jpg" alt="078" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0790acfc13aa60d523e.jpg" alt="079" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0805d7187fa0a4c01c8.jpg" alt="080" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/081e075ceec1c39ca23.jpg" alt="081" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0821680cd5f309d6e24.jpg" alt="082" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/083bfe54497315b99fa.jpg" alt="083" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/08473119a937563abf3.jpg" alt="084" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/08500c09d40a092b2fc.jpg" alt="085" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/086b2800f3b2851d9c0.jpg" alt="086" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/087268a3ed341186562.jpg" alt="087" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0885d46db33a1be4545.jpg" alt="088" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/08975ffcbb8c8ef4164.jpg" alt="089" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/09057db043a06f377d6.jpg" alt="090" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0914b7ad4bbf0807c85.jpg" alt="091" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0927b93011d810ab760.jpg" alt="092" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/09322e70def810bf926.jpg" alt="093" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/094e5551316571c4933.jpg" alt="094" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/09524d40881cc130562.jpg" alt="095" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/096a2b7dde0719c720c.jpg" alt="096" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0970baec4f42a21962c.jpg" alt="097" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/098bcfe13fd5377c517.jpg" alt="098" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/0992ab3ea6fbf4bad2f.jpg" alt="099" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/100975e02d043e69eef.jpg" alt="100" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/1013053763419785eef.jpg" alt="101" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/102dd25175099dba7b6.jpg" alt="102" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/10312978cfc454c98a8.jpg" alt="103" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/1040ba98449292ba491.jpg" alt="104" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/105145368d0bed10275.jpg" alt="105" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/106a1346436251e0585.jpg" alt="106" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/107e107c997f74d4309.jpg" alt="107" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/108f7b8364f2dea0623.jpg" alt="108" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/10981b309e98470edd5.jpg" alt="109" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/110cd9981f23a47e9a8.jpg" alt="110" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/111d6509cb0b4c0e197.jpg" alt="111" border="0">
+<img src="https://image.acg.lol/file/2026/10/04/11269f7aa6da8d7a2d1.jpg" alt="112" border="0">
+</div>
+
+<!-- 独立大图浏览 -->
+<div class="viewer" id="viewer">
+
+    <span class="close" id="close"
+          aria-label="关闭">&times;</span>
+
+    <span class="nav prev" id="prev"
+          aria-label="上一张">&#10094;</span>
+
+    <img class="viewer-image" id="viewerImage"
+         src="" alt="大图预览">
+
+    <span class="nav next" id="next"
+          aria-label="下一张">&#10095;</span>
+
+    <div class="counter" id="counter"></div>
+</div>
+
+<script>
+const images = Array.from(
+    document.querySelectorAll("#gallery img")
+);
+
+const viewer = document.getElementById("viewer");
+const viewerImage = document.getElementById("viewerImage");
+const counter = document.getElementById("counter");
+
+let currentIndex = 0;
+
+// 打开图片
+function openViewer(index) {
+    currentIndex = index;
+    updateImage();
+    viewer.classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+
+// 更新大图
+function updateImage() {
+    const img = images[currentIndex];
+
+    viewerImage.src = img.src;
+    viewerImage.alt = img.alt || "图片预览";
+    counter.textContent =
+        `${currentIndex + 1} / ${images.length}`;
+}
+
+// 关闭图片
+function closeViewer() {
+    viewer.classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+// 上一张
+function showPrev() {
+    currentIndex =
+        (currentIndex - 1 + images.length) % images.length;
+    updateImage();
+}
+
+// 下一张
+function showNext() {
+    currentIndex =
+        (currentIndex + 1) % images.length;
+    updateImage();
+}
+
+// 绑定图片点击
+images.forEach((img, index) => {
+    img.addEventListener("click", () => {
+        openViewer(index);
+    });
+});
+
+// 绑定按钮
+document.getElementById("close")
+    .addEventListener("click", closeViewer);
+
+document.getElementById("prev")
+    .addEventListener("click", showPrev);
+
+document.getElementById("next")
+    .addEventListener("click", showNext);
+
+// 点击黑色背景关闭
+viewer.addEventListener("click", (event) => {
+    if (event.target === viewer) {
+        closeViewer();
+    }
+});
+
+// 键盘操作
+document.addEventListener("keydown", (event) => {
+    if (!viewer.classList.contains("active")) return;
+
+    if (event.key === "Escape") closeViewer();
+    if (event.key === "ArrowLeft") showPrev();
+    if (event.key === "ArrowRight") showNext();
+});
+</script>
+</body>
+</html>
