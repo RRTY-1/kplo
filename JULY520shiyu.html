@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+<title>自适应图片浏览器</title>
+<style>
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, "Microsoft YaHei", sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    padding: clamp(10px, 3vw, 30px);
+}
+
+/* 标题 */
+h1 {
+    text-align: center;
+    font-size: clamp(20px, 3vw, 30px);
+    margin: 10px 0 25px;
+}
+
+/* 单列图片，自适应宽度 */
+.gallery {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 20px;
+    border-radius: clamp(4px, 1vw, 10px);
+    cursor: pointer;
+    object-fit: contain;
+    transition: opacity 0.2s;
+}
+
+.gallery img:hover {
+    opacity: 0.85;
+}
+
+/* 图片浏览层 */
+.viewer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.96);
+    align-items: center;
+    justify-content: center;
+    padding: 60px 15px;
+}
+
+.viewer.active {
+    display: flex;
+}
+
+/* 大图 */
+.viewer-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    user-select: none;
+}
+
+/* 关闭按钮 */
+.close {
+    position: absolute;
+    top: 10px;
+    right: clamp(15px, 3vw, 35px);
+    color: white;
+    font-size: clamp(30px, 5vw, 45px);
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+    padding: 5px 10px;
+}
+
+/* 左右切换 */
+.nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: clamp(30px, 5vw, 50px);
+    padding: clamp(8px, 2vw, 20px);
+    cursor: pointer;
+    user-select: none;
+    z-index: 2;
+    border-radius: 8px;
+}
+
+.nav:active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.prev {
+    left: 0;
+}
+
+.next {
+    right: 0;
+}
+
+/* 图片计数 */
+.counter {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 14px;
+}
+
+/* 手机端优化 */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        margin: 10px 0 18px;
+    }
+
+    .gallery img {
+        margin-bottom: 12px;
+        border-radius: 5px;
+    }
+
+    .viewer {
+        padding: 55px 5px;
+    }
+
+    .viewer-image {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .nav {
+        padding: 12px 8px;
+        font-size: 32px;
+    }
+
+    .close {
+        top: 15px;
+        right: 10px;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 360px) {
+    .nav {
+        font-size: 26px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>我的图片相册</h1>
+
+<!-- 单列图片展示 -->
+<div class="gallery" id="gallery">
+    <img src="https://image.acg.lol/file/2026/10/20/DSC04141--.jpg" alt="DSC04141 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04163--.jpg" alt="DSC04163 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04166--.jpg" alt="DSC04166 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04170--.jpg" alt="DSC04170 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04197--.jpg" alt="DSC04197 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04211--.jpg" alt="DSC04211 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04216--.jpg" alt="DSC04216 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04225--.jpg" alt="DSC04225 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04236--.jpg" alt="DSC04236 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04238--.jpg" alt="DSC04238 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04240--.jpg" alt="DSC04240 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04249--.jpg" alt="DSC04249 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04256--.jpg" alt="DSC04256 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04261--.jpg" alt="DSC04261 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04262--.jpg" alt="DSC04262 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04265--.jpg" alt="DSC04265 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04271--.jpg" alt="DSC04271 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04282--.jpg" alt="DSC04282 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04285--.jpg" alt="DSC04285 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04288--.jpg" alt="DSC04288 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04290--.jpg" alt="DSC04290 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04293--.jpg" alt="DSC04293 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04296--.jpg" alt="DSC04296 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04298--.jpg" alt="DSC04298 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04301--.jpg" alt="DSC04301 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04304--.jpg" alt="DSC04304 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04306--.jpg" alt="DSC04306 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04310--.jpg" alt="DSC04310 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04315--.jpg" alt="DSC04315 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04317--.jpg" alt="DSC04317 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04321--.jpg" alt="DSC04321 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04326--.jpg" alt="DSC04326 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04332--.jpg" alt="DSC04332 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04333--.jpg" alt="DSC04333 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04340--.jpg" alt="DSC04340 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04349--.jpg" alt="DSC04349 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04351--.jpg" alt="DSC04351 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04354--.jpg" alt="DSC04354 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04355--.jpg" alt="DSC04355 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04360--.jpg" alt="DSC04360 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04365--.jpg" alt="DSC04365 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04369--.jpg" alt="DSC04369 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04379--.jpg" alt="DSC04379 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04389--.jpg" alt="DSC04389 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04392--.jpg" alt="DSC04392 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04396--.jpg" alt="DSC04396 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04400--.jpg" alt="DSC04400 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04402--.jpg" alt="DSC04402 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04404--.jpg" alt="DSC04404 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04406--.jpg" alt="DSC04406 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04407--.jpg" alt="DSC04407 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04411--.jpg" alt="DSC04411 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04417--.jpg" alt="DSC04417 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04420--.jpg" alt="DSC04420 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04429--.jpg" alt="DSC04429 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04435--.jpg" alt="DSC04435 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04440--.jpg" alt="DSC04440 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04442--.jpg" alt="DSC04442 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04446--.jpg" alt="DSC04446 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04450--.jpg" alt="DSC04450 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04453--.jpg" alt="DSC04453 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04454--.jpg" alt="DSC04454 已增强 降噪" border="0">
+<img src="https://image.acg.lol/file/2026/10/20/DSC04459--.jpg" alt="DSC04459 已增强 降噪" border="0">
+</div>
+
+<!-- 独立大图浏览 -->
+<div class="viewer" id="viewer">
+
+    <span class="close" id="close"
+          aria-label="关闭">&times;</span>
+
+    <span class="nav prev" id="prev"
+          aria-label="上一张">&#10094;</span>
+
+    <img class="viewer-image" id="viewerImage"
+         src="" alt="大图预览">
+
+    <span class="nav next" id="next"
+          aria-label="下一张">&#10095;</span>
+
+    <div class="counter" id="counter"></div>
+</div>
+
+<script>
+const images = Array.from(
+    document.querySelectorAll("#gallery img")
+);
+
+const viewer = document.getElementById("viewer");
+const viewerImage = document.getElementById("viewerImage");
+const counter = document.getElementById("counter");
+
+let currentIndex = 0;
+
+// 打开图片
+function openViewer(index) {
+    currentIndex = index;
+    updateImage();
+    viewer.classList.add("active");
+    document.body.style.overflow = "hidden";
+}
+
+// 更新大图
+function updateImage() {
+    const img = images[currentIndex];
+
+    viewerImage.src = img.src;
+    viewerImage.alt = img.alt || "图片预览";
+    counter.textContent =
+        `${currentIndex + 1} / ${images.length}`;
+}
+
+// 关闭图片
+function closeViewer() {
+    viewer.classList.remove("active");
+    document.body.style.overflow = "";
+}
+
+// 上一张
+function showPrev() {
+    currentIndex =
+        (currentIndex - 1 + images.length) % images.length;
+    updateImage();
+}
+
+// 下一张
+function showNext() {
+    currentIndex =
+        (currentIndex + 1) % images.length;
+    updateImage();
+}
+
+// 绑定图片点击
+images.forEach((img, index) => {
+    img.addEventListener("click", () => {
+        openViewer(index);
+    });
+});
+
+// 绑定按钮
+document.getElementById("close")
+    .addEventListener("click", closeViewer);
+
+document.getElementById("prev")
+    .addEventListener("click", showPrev);
+
+document.getElementById("next")
+    .addEventListener("click", showNext);
+
+// 点击黑色背景关闭
+viewer.addEventListener("click", (event) => {
+    if (event.target === viewer) {
+        closeViewer();
+    }
+});
+
+// 键盘操作
+document.addEventListener("keydown", (event) => {
+    if (!viewer.classList.contains("active")) return;
+
+    if (event.key === "Escape") closeViewer();
+    if (event.key === "ArrowLeft") showPrev();
+    if (event.key === "ArrowRight") showNext();
+});
+</script>
+</body>
+</html>
